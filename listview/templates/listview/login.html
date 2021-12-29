@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login | Rocket Singh</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'login.css' %}" />
+    <link rel="icon" href="{% static 'favicon.ico' %}" />
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="image">
+        <h2>Rocket Singh</h2>
+        <p>Sales CRM by Flookup</p>
+        <img src="{% static 'logo.png' %}" alt="logo" />
+      </div>
+      <div class="login">
+        <div class="login-box">
+          <h2>Login</h2>
+          {% if messages %}
+          <ul class="messages">
+            {% for message in messages %}
+            <li
+              {%
+              if
+              message.tags
+              %}
+              class="{{message.tags}} alerts"
+              {%
+              endif
+              %}
+            >
+              {{ message }}
+            </li>
+            {% endfor %}
+          </ul>
+          {% endif %}
+          <form id="login-form" method="post" action="">
+            {% csrf_token %}
+            <div class="user-box">
+              <input
+                type="text"
+                name="email"
+                required=""
+                class="myInput"
+                id="mail"
+              />
+              <label>E-mail Address</label>
+            </div>
+            <div class="user-box">
+              <input
+                type="password"
+                name="password"
+                required=""
+                class="myInput"
+                id="pass"
+              />
+              <label>Password</label>
+            </div>
+            <a
+              href="javascript:{}"
+              onclick="document.getElementById('login-form').submit()"
+              id="myBtn"
+            >
+              <span></span>
+              <span></span>
+              <span></span>
+              <span></span>
+              Log In
+            </a>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      var input = document.querySelector("#mail");
+      var pass = document.querySelector("#pass");
+
+      input.addEventListener("keyup", function (event) {
+        if (event.keyCode === 13) {
+          event.preventDefault();
+          document.getElementById("myBtn").click();
+        }
+      });
+      pass.addEventListener("keyup", function (event) {
+        if (event.keyCode === 13) {
+          event.preventDefault();
+          document.getElementById("myBtn").click();
+        }
+      });
+    </script>
+  </body>
+</html>

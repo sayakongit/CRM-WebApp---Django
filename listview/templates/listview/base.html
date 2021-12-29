@@ -1,0 +1,1339 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <link rel="stylesheet" href="https://unpkg.com/@trevoreyre/autocomplete-js/dist/style.css" />
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+    integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.1/css/bootstrap.css"
+    integrity="sha512-Ty5JVU2Gi9x9IdqyHN0ykhPakXQuXgGY5ZzmhgZJapf3CpmQgbuhGxmI4tsc8YaXM+kibfrZ+CNX4fur14XNRg=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.18/css/bootstrap-select.min.css"
+    integrity="sha512-ARJR74swou2y0Q2V9k0GbzQ/5vJ2RBSoCWokg4zkfM29Fb3vZEQyv0iWBMW/yvKgyHSR/7D64pFMmU8nYmbRkg=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  {% load static %}
+
+  <script src="{% static 'base.js' %}"></script>
+  <link rel="icon" href="{% static 'favicon.ico' %}">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css"
+    integrity="sha384-DyZ88mC6Up2uqS4h/KRgHuoeGwBcD4Ng9SiP4dIRy0EXTlnuz47vAwmeGwVChigm" crossorigin="anonymous" />
+  <link rel="stylesheet" href="//code.jquery.com/ui/1.13.0/themes/base/jquery-ui.css">
+  <link rel="stylesheet" href="{% static 'base.css' %}" />
+  <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+  <title>Rocket Singh | Customer Relation Management</title>
+</head>
+
+<body>
+  <!-- Header Controls -->
+
+  <!-- <div id="loader" class="center"></div> -->
+
+  <div id="alert-popup" class="popup alert alert-warning alert-dismissible fade show hide" role="alert">
+    <h6 id="popup-message">hello</h6>
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+
+
+
+  <div id="loading-overlay">
+    <div class="loading-icon"></div>
+  </div>
+
+  <header>
+    <div class="h-left">
+      <!-- Header title  -->
+      <h5> <span><a href="/" class="pages p-active">Leads</a></span>{% if user.is_superuser %} / <span><a href="/users"
+            class="pages">Users</a></span>{% endif %}</h5>
+      <a href="/" class="text-primary">
+        <h2>Rocket Singh</h2>
+      </a>
+      <div class="lower-text">
+        <p>Customer Relation Management Solution</p>
+      </div>
+    </div>
+    <div class="h-right">
+      <div class="modal-group flex-right">
+        {% if user.is_superuser %}
+        <button type="button" id="new-user" data-toggle="modal" data-target="#newUserModal" class="btn-modal">
+          <i class="far fa-user"></i> Create User
+        </button>
+        {% endif %}
+        <button type="button" id="new" data-toggle="modal" data-target="#myModal" class="btn-modal">
+          <i class="far fa-file"></i> New Record
+        </button>
+
+        <button type="button" id="campaign" data-toggle="modal" data-target=".myEmail" class="btn-modal"><i
+            class="far fa-paper-plane"></i> Send Email</button>
+        <form action="/user/logout/" method="post">
+          {% csrf_token %}
+          <button type="submit" id="logout-button" class="btn-modal btn-danger" data-toggle="tooltip"
+            data-placement="bottom" title="Log Out">
+            <i class="fas fa-power-off"></i>
+          </button>
+        </form>
+      </div>
+      <div class="btn-group">
+        <form method="get" class="search-form">
+          <input type="text" id="tags" class="tags search-field" name="search-name" />
+          <input type="submit" value="Search" name="" id="" class="btn-search">
+        </form>
+
+        <a><i id="update_linkedin_data" class="fas fa-redo-alt btn-icon"></i></a>
+        <i id="filter" class="fas fa-filter btn-icon" onclick="show_hide()"></i>
+        {% if user.is_superuser %}
+        <a href="/exportcsv"><i class="fas fa-download btn-icon"></i></a>
+        {% endif %}
+      </div>
+    </div>
+  </header>
+
+  <!-- Table list Details  -->
+
+  <div class="main-body">
+    <div class="table-body" id="table">
+      <section class="scroll-div">
+        <table id="maintable" class="table table-hover">
+          <thead class="t-head">
+            <tr>
+              <th scope="col">#</th>
+              <th><input type="checkbox" id="t_head" class="check-main"></th>
+              <th scope="col">Name</th>
+              <th scope="col">Current Company</th>
+              <th scope="col">Title</th>
+              <th scope="col">Current Role</th>
+              <th scope="col">Nature of work</th>
+              <th scope="col">E-mail</th>
+              <th scope="col">Phone</th>
+              <!-- <th scope="col">Date Created</th> -->
+              <th scope="col" width="90px">Actions</th>
+              <th scope="col"></th>
+
+            </tr>
+          </thead>
+          <tbody>
+            {% for data in datas reversed %}
+            <tr>
+              <th scope="row">{{forloop.counter}}</th>
+
+              <td><input type="checkbox" id="check-value" value="{{data.email}}" class="check-class"></td>
+              <td hidden id='linkedinapidata' class="id-value">{{data.id}}</td>
+              <td hidden id='linkedinapidata'>{{data.linkedin}}</td>
+              <td id='linkedinapidata'>
+                <a href="{{data.linkedin}}" target="_blank" class="pages cust-name">{{data.name}}</a>
+              </td>
+              <td id='linkedinapidata'>{{ data.company }}</td>
+              <td id='linkedinapidata'>{{ data.linkedin_title }}</td>
+              <td id='linkedinapidata'>{{ data.current_role }}</td>
+              <td>{{ data.nature_of_work }}</td>
+              <td>{{ data.email }}</td>
+              <td>{{ data.phone }}</td>
+              <!-- <td>{{ data.date }}</td> -->
+              <td>
+                {% if data.phone %}
+                <a href="https://wa.me/91{{ data.phone }}" target="_blank" class="pages"><i class="fab fa-whatsapp btn-action"></i></a>
+                {% else %}
+                <a class="pages disabled"><i class="fab fa-whatsapp btn-action"></i></a>
+                {% endif %}
+                {% if data.email %}
+                <a href="mailto:{{ data.email }}"><i class="far fa-envelope btn-action"></i></a>
+                {% else %}
+                <a class="disabled"><i class="far fa-envelope btn-action"></i></a>
+                {% endif %}
+              </td>
+              <td>
+                <div class="dropdown dropleft">
+                  <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton"
+                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                  </button>
+                  <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                    <a class="dropdown-item edit-link" href="#" data-toggle="modal" data-target="#myEdit"
+                      data-name="{{ data.name }}" data-company="{{ data.company }}" data-email="{{ data.email }}"
+                      data-phone="{{ data.phone }}" data-linkedin="{{ data.linkedin }}"
+                      data-connected-by="{{ data.connection }}" data-rating="{{ data.rating }}" data-id="{{ data.id }}"
+                      data-status="{{ data.status }}" data-category="{{ data.category }}"
+                      data-connect-type="{{ data.connect_type}}" data-designation="{{data.linkedin_title}}"
+                      data-nature-of-work="{{data.nature_of_work}}" data-current-role="{{ data.current_role }}"
+                      data-linkedin-summary="{{data.linkedin_summary}}" ">
+                      <i class=" far fa-edit"></i> Edit
+                    </a>
+                    {% if user.is_superuser %}
+                    <a class="dropdown-item" onclick="deletecustomerfunction(this)">
+                      <div class="flex-right">
+                        <i class="far fa-trash-alt" id="trash"></i>
+                        <form method="POST">
+                          {% csrf_token %}
+                          <input type="hidden" name="name" class="user-id" value="{{data.id}}">
+                          <input type="button" name="" id="btn-delete" value="Delete">
+                        </form>
+                      </div>
+
+                    </a>
+                    {% endif %}
+                    <a class="dropdown-item view-link" href="#" data-name="{{ data.name }}"
+                      data-company="{{ data.company }}" data-email="{{ data.email }}" data-phone="{{ data.phone }}"
+                      data-linkedin="{{ data.linkedin }}" data-category="{{ data.category}}"
+                      data-rating="{{data.rating}}" data-connection="{{data.connection}}" data-status="{{data.status}}"
+                      data-connect-type="{{data.connect_type}}" data-designation="{{data.linkedin_title}}"
+                      data-nature-of-work="{{data.nature_of_work}}" data-current-role="{{ data.current_role }}"
+                      data-linkedin-summary="{{data.linkedin_summary}}" data-toggle="modal" data-target="#myView">
+                      <i class="far fa-eye"></i> View
+                    </a>
+                  </div>
+                </div>
+              </td>
+
+            </tr>
+
+            {% empty %}
+            <div class="alert alert-danger mb-0 " role="alert">
+              0 Record Found!
+            </div>
+            {% endfor %}
+          </tbody>
+        </table>
+      </section>
+    </div>
+
+    <div class="filter-menu" id="content">
+      <div class="filter-title">
+        <h3>Filters</h3>
+        <i id="arrow" class="fas fa-arrow-right" onclick="show_hide()"></i>
+      </div>
+      <div class="filter-body" id="filter-div">
+        <form action="/filter" method="post">
+          {% csrf_token %}
+          <p>Select Category</p>
+          <select class="form-control multi_select selectpicker" multiple id="category" name="category">
+            <option>Chartered Accountant</option>
+            <option>Company Secretary</option>
+            <option>MBA</option>
+            <option>CFO</option>
+            <option>Influencer</option>
+            <option>Partner of BigFirm</option>
+            <option>Startup Entrepreneur</option>
+            <option>CEO/COO</option>
+            <option>CPA</option>
+            <option>OTHERS</option>
+          </select>
+          <div class="slidecontainer">
+            <p>Select Rating</p>
+            <div class="range-label">
+              <p>1</p>
+              <p>2</p>
+              <p>3</p>
+              <p>4</p>
+              <p>5</p>
+            </div>
+            <input type="range" min="1" max="5" value="1" class="slider" id="myRange" name="rating">
+            <div id="selector">
+              <div class="select-btn"></div>
+            </div>
+            <p>Connected By</p>
+            <input type="text" class="form-group tags-filter" name="connected_by" id="filter-connect">
+            <p>Nature of work</p>
+            <select class="form-control multi_select selectpicker" multiple id="filter-nature-of-work "
+              name="nature-of-work">
+              <option value="15CACB">15CACB</option>
+              <option value="Fixed Assets">Fixed Assets</option>
+              <option value="Accounting">Accounting</option>
+              <option value="Compliance">Compliance</option>
+              <option value="Virtual CFO">Virtual CFO</option>
+              <option value="Automation">Automation</option>
+              <option value="Mutual Funds">Mutual Funds</option>
+              <option value="Social Commerce">Social Commerce</option>
+              <option value="AP Automation">AP Automation</option>
+            </select>
+            <p>Select Business Status</p>
+            <select class="form-control multi_select selectpicker" multiple id="b_status" name="b_status">
+              <option>Business Done</option>
+              <option>Business Proposed but not done</option>
+              <option>Enquiry Done</option>
+              <option>Business Not Done</option>
+              <option>Connecting us for business (referrer)</option>
+            </select>
+            <p>Select Connect Type</p>
+            <select class="form-control multi_select selectpicker" multiple id="category" name="connect_type">
+              <option>Kaam ka Banda</option>
+              <option>Pheku</option>
+              <option>Jugaadu</option>
+              <option>Amazing Networks</option>
+              <option>Gazab Ideas</option>
+              <option>Normal</option>
+            </select>
+            <button type="submit" class="btn btn-primary" id="filter-apply">Apply</button>
+
+        </form>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- New Profile Modal -->
+
+  <div class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel"
+    aria-hidden="true" id="myModal">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLongTitle">
+            Add New Record
+          </h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span class="btn-cross"><i class="fas fa-times"></i></span>
+          </button>
+        </div>
+        <div class="modal-body" id="new-modal">
+          <form id="add_data">
+            {% csrf_token %}
+            <div class="form-group">
+              <label for="linkedin">Linkedin Profile Link</label>
+              <div class="row">
+                <div class="col">
+                  <input type="text" class="form-control" id="linkedin" name="linkedin"
+                    placeholder="Paste your link here" />
+                </div>
+                <div class="col">
+                  <button id="autofill-button" type="button" class="btn btn-info">Autofill</button>
+                  <img src="{% static 'loader.gif' %}" alt="loader" id="loader">
+                </div>
+
+              </div>
+
+            </div>
+            <div class="row">
+              <div class="col">
+                <div class="form-group">
+                  <label for="name">Name</label>
+                  <input type="text" class="form-control" id="name" name="name" placeholder="Enter the name" required />
+                </div>
+              </div>
+              <div class="col">
+                <div class="form-group">
+                  <label for="email">Email address</label>
+                  <input type="email" class="form-control" id="email" name="email" placeholder="name@example.com" />
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col">
+                <div class="form-group validation">
+                  <label for="phone">Phone Number</label>
+                  <input type="phone" class="form-control" id="phone" name="phone" placeholder="Enter phone number" />
+                  <i class="fas fa-times u_times" id="phone-cross"></i>
+                  <i class="fas fa-check u_check" id="phone-check"></i>
+
+                </div>
+              </div>
+              <div class="col">
+                <div class="form-group">
+                  <label for="company">Current Company</label>
+                  <input type="text" class="form-control" id="company" name="company"
+                    placeholder="Enter your company" />
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col">
+                <div class="form-group">
+                  <label for="designation">Linkedin Title</label>
+                  <input type="text" class="form-control" id="designation" name="designation"
+                    placeholder="Enter title here" />
+                </div>
+              </div>
+              <div class="col">
+                <div class="form-group">
+                  <label for="current-role">Current Role</label>
+                  <input type="text" class="form-control" id="current-role" name="current-role"
+                    placeholder="Enter current role here" />
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col">
+                <div class="form-group">
+                  <label for="exampleFormControlSelect1">Nature of work</label>
+                  <select class="form-control multi_select selectpicker" multiple id="nature-of-work"
+                    name="nature-of-work">
+                    <option value="15CACB">15CACB</option>
+                    <option value="Fixed Assets">Fixed Assets</option>
+                    <option value="Accounting">Accounting</option>
+                    <option value="Compliance">Compliance</option>
+                    <option value="Virtual CFO">Virtual CFO</option>
+                    <option value="Automation">Automation</option>
+                    <option value="Mutual Funds">Mutual Funds</option>
+                    <option value="Social Commerce">Social Commerce</option>
+                    <option value="AP Automation">AP Automation</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col">
+                <div class="form-group">
+                  <label for="exampleFormControlSelect1">Our Rating</label>
+                  <div>
+                    <span onmouseover="starmark(this)" onclick="starmark(this)" id="1one"
+                      style="font-size:24px;cursor:pointer; color: grey;" class="fa fa-star checked"></span>
+                    <span onmouseover="starmark(this)" onclick="starmark(this)" id="2one"
+                      style="font-size:24px;cursor:pointer; color: grey;" class="fa fa-star "></span>
+                    <span onmouseover="starmark(this)" onclick="starmark(this)" id="3one"
+                      style="font-size:24px;cursor:pointer; color: grey;" class="fa fa-star "></span>
+                    <span onmouseover="starmark(this)" onclick="starmark(this)" id="4one"
+                      style="font-size:24px;cursor:pointer; color: grey ;" class="fa fa-star"></span>
+                    <span onmouseover="starmark(this)" onclick="starmark(this)" id="5one"
+                      style="font-size:24px;cursor:pointer; color: grey;" class="fa fa-star"></span>
+                  </div>
+                  <input type="hidden" name="rating" id="rating" value="1">
+
+                </div>
+              </div>
+              <div class="col">
+
+                <div class="form-group">
+                  <label for="exampleFormControlSelect1">Connected by
+                  </label>
+                  <input class="form-control tags-new" id="connection" name="connection" />
+                </div>
+              </div>
+
+              <div class="col">
+                <div class="form-group">
+                  <label for="exampleFormControlSelect1">Business Status</label>
+                  <select class="form-control" id="status" name="status">
+                    <option selected disabled="True">--Pick an option--</option>
+                    <option value="Business Done">Business Done</option>
+                    <option value="Business Proposed but not done">Business Proposed but not done</option>
+                    <option value="Enquiry Done">Enquiry Done</option>
+                    <option value="Business Not Done">Business Not Done</option>
+                    <option value="Connecting us for business (referrer)">Connecting us for business (referrer)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col">
+                <div class="form-group">
+                  <label for="exampleFormControlSelect1">Category</label>
+                  <select class="form-control multi_select selectpicker" multiple id="category" name="category">
+                    <option value="Chartered Accountant">Chartered Accountant</option>
+                    <option value="Company Secretary">Company Secretary</option>
+                    <option value="MBA">MBA</option>
+                    <option value="CFO">CFO</option>
+                    <option value="Influencer">Influencer</option>
+                    <option value="Partner of BigFirm">Partner of BigFirm</option>
+                    <option value="Startup Entrepreneur">Startup Entrepreneur</option>
+                    <option value="CEO/COO">CEO/COO</option>
+                    <option value="CPA">CPA</option>
+                    <option value="OTHERS">OTHERS</option>
+                  </select>
+                </div>
+              </div>
+              <div class="col">
+                <div class="form-group">
+                  <label for="exampleFormControlSelect1">Connect Type</label>
+                  <select class="form-control multi_select selectpicker" multiple id="connect_type" name="connect_type">
+                    <option value="Kaam ka Banda">Kaam ka Banda</option>
+                    <option value="Pheku">Pheku</option>
+                    <option value="Jugaadu">Jugaadu</option>
+                    <option value="Amazing Networks">Amazing Networks</option>
+                    <option value="Gazab Ideas">Gazab Ideas</option>
+                    <option value="Normal">Normal</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+
+            <div class="form-group">
+              <input class="form-control" id="linkedin-summary" name="linkedin-summary" hidden />
+            </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">
+            Close
+          </button>
+          <!-- <button type="submit" class="btn btn-secondary" data-toggle="modal" data-target="#myModal">
+            Save & Add new
+          </button> -->
+          <button type="button" class="btn btn-success" onClick="add_data()" data-dismiss="modal">Add Details</button>
+        </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- New user modal  -->
+
+  <div class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel"
+    aria-hidden="true" id="newUserModal">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="new-user-exampleModalLongTitle">
+            Add New Account
+          </h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span class="btn-cross"><i class="fas fa-times"></i></span>
+          </button>
+        </div>
+        <form id="new-user-form" method="post" action="/create_user">
+          <div class="modal-body">
+            {% csrf_token %}
+
+            <div class="row">
+              <div class="col">
+                <div class="form-group">
+                  <label for="new-user-name">Name</label>
+                  <input type="text" class="form-control" id="new-user-name" name="name" placeholder="Enter the name" />
+                </div>
+              </div>
+              <div class="col">
+                <div class="form-group">
+                  <label for="new-user-email">Email address</label>
+                  <input type="email" class="form-control" id="new-user-email" name="email"
+                    placeholder="name@example.com" />
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col">
+                <div class="form-group">
+                  <label for="new-user-password">Password</label>
+                  <input type="password" class="form-control" id="new-user-password" name="password"
+                    placeholder="Password" />
+                </div>
+              </div>
+              <div class="col">
+                <div class="form-group">
+                  <label for="new-user-exampleFormControlSelect1">Access Level</label>
+                  <select class="form-control" id="new-user-exampleFormControlSelect1" name="access-level">
+                    <option>Standard</option>
+                    <option>Admin</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">
+              Close
+            </button>
+
+            <button type="submit" class="btn btn-success" onclick="send_new_user_data()" data-dismiss="modal">Create
+              New User</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- View Modal -->
+
+  <div class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel"
+    aria-hidden="true" id="myView">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLongTitle">
+            View profile
+          </h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span class="btn-cross"><i class="fas fa-times"></i></span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="view-linkedin">Linkedin Profile Link</label>
+            <div class="row">
+              <div class="col">
+                <input class="form-control" id="view-linkedin" readonly></input>
+              </div>
+            </div>
+
+          </div>
+          <div class="row">
+            <div class="col">
+              <div class="form-group">
+                <label for="view-name">Name</label>
+                <input class="form-control" id="view-name" readonly></input>
+              </div>
+            </div>
+            <div class="col">
+              <div class="form-group">
+                <label for="view-email">Email address</label>
+                <input class="form-control" id="view-email" readonly></input>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+              <div class="form-group">
+                <label for="view-phone">Phone Number</label>
+                <input class="form-control" id="view-phone" readonly></input>
+              </div>
+            </div>
+            <div class="col">
+              <div class="form-group">
+                <label for="view-company">Current Company</label>
+                <input class="form-control" id="view-company" readonly></input>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+              <div class="form-group">
+                <label for="view-designation">Linkedin Title</label>
+                <input type="text" class="form-control" id="view-designation" value="" readonly></input>
+              </div>
+            </div>
+            <div class="col">
+              <div class="form-group">
+                <label for="view-current-role">Current Role</label>
+                <input type="text" class="form-control" id="view-current-role" readonly/>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+              <div class="form-group">
+                <label for="view-nature-of-work">Nature of work</label>
+                <input class="form-control" id="view-nature-of-work" readonly/>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+              <div class="form-group">
+                <label for="view-rating">Rating</label>
+                <input class="form-control" id="view-rating" readonly></input>
+              </div>
+            </div>
+            <div class="col">
+              <div class="form-group">
+                <label for="view-connection">Connected by</label>
+                <input class="form-control" id="view-connection" readonly></input>
+              </div>
+            </div>
+            <div class="col">
+              <div class="form-group">
+                <label for="view-status">Business Status</label>
+                <input class="form-control" id="view-status" readonly></input>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+              <div class="form-group">
+                <label for="view-category">Category</label>
+                <input class="form-control" id="view-category" readonly></input>
+              </div>
+            </div>
+            <div class="col">
+              <div class="form-group">
+                <label for="view-connect-type">Connect Type</label>
+                <input class="form-control" id="view-connect-type" readonly></input>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Modal  -->
+
+  <div class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel"
+    aria-hidden="true" id="myEdit">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLongTitle">
+            Edit an existing Profile
+          </h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span class="btn-cross"><i class="fas fa-times"></i></span>
+          </button>
+        </div>
+        <form id="edit-details-form">
+          <div class="modal-body" id='edit-modal'>
+            {% csrf_token %}
+            <div class="form-group">
+              <label for="linkedin">Linkedin Profile Link</label>
+              <div class="row">
+                <div class="col">
+                  <input type="text" class="form-control" id="edit-linkedin" name="edit-linkedin"
+                    value="www.linkedin.com" />
+                </div>
+                <div class="col">
+                  <button onclick="autofillEdit()" type="button" class="btn btn-info">Autofill</button>
+                </div>
+
+              </div>
+
+            </div>
+            <div class="row">
+              <div class="col">
+                <div class="form-group">
+                  <label for="edit-name">Name</label>
+                  <input type="text" class="form-control" id="edit-name" name="edit-name" value="Name" />
+
+                  <input type="hidden" class="form-control" name="edit-id" id="edit-id" value="00">
+
+                </div>
+              </div>
+              <div class="col">
+                <div class="form-group">
+                  <label for="edit-email">Email address</label>
+                  <input type="email" class="form-control" id="edit-email" name="edit-email" value="email@mail.com" />
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col">
+                <div class="form-group">
+                  <label for="edit-phone">Phone Number</label>
+                  <input type="phone" class="form-control" id="edit-phone" name="edit-phone" value="123" />
+                </div>
+              </div>
+              <div class="col">
+                <div class="form-group">
+                  <label for="edit-company">Current Company</label>
+                  <input type="text" class="form-control" id="edit-company" name="edit-company" value="Rocket" />
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col">
+                <div class="form-group">
+                  <label for="edit-designation">Linkedin Title</label>
+                  <input type="text" class="form-control" id="edit-designation" name="edit-designation" />
+                </div>
+              </div>
+              <div class="col">
+                <div class="form-group">
+                  <label for="edit-current-role">Current Role</label>
+                  <input type="text" class="form-control" id="edit-current-role" name="edit-current-role" />
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col">
+                <div class="form-group">
+                  <label for="exampleFormControlSelect1">Nature of work</label>
+                  <select class="form-control multi_select selectpicker" multiple id="edit-nature-of-work"
+                    name="edit-nature-of-work">
+                    <option value="15CACB">15CACB</option>
+                    <option value="Fixed Assets">Fixed Assets</option>
+                    <option value="Accounting">Accounting</option>
+                    <option value="Compliance">Compliance</option>
+                    <option value="Virtual CFO">Virtual CFO</option>
+                    <option value="Automation">Automation</option>
+                    <option value="Mutual Funds">Mutual Funds</option>
+                    <option value="Social Commerce">Social Commerce</option>
+                    <option value="AP Automation">AP Automation</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col">
+                <div class="form-group">
+                  <label for="edit-rating">Our Rating</label>
+                  <select class="form-control" id="edit-rating" name="edit-rating">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                  </select>
+                </div>
+              </div>
+              <!-- <div class="col">
+
+                <div class="form-group">
+                  <label for="exampleFormControlSelect1">Connected by</label>
+                  <select class="form-control" id="exampleFormControlSelect1" name="edit-connected-by">
+                    <option>--Pick an option--</option>
+                    <option>Direct</option>
+                    <option>Person 1</option>
+                    <option>Person 2</option>
+                    <option>Person 3</option>
+                    <option>Person 4</option>
+                    <option>Person 5</option>
+                  </select>
+                </div>
+              </div> -->
+              <div class="col">
+
+                <div class="form-group">
+                  <label for="exampleFormControlSelect1">Connected by
+                  </label>
+                  <input class=" form-control edit-tags-new" id="edit-connected-by" name="edit-connected-by" />
+                </div>
+              </div>
+              <div class="col">
+                <div class="form-group">
+                  <label for="edit-status">Business Status</label>
+                  <select class="form-control" id="edit-status" name="edit-business-status">
+                    <option value="Business Done">Business Done</option>
+                    <option value="Business Proposed but not done">Business Proposed but not done</option>
+                    <option value="Enquiry Done">Enquiry Done</option>
+                    <option value="Business Not Done">Business Not Done</option>
+                    <option value="Connecting us for business (referrer)">Connecting us for business (referrer)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="edit-category">Category</label>
+              <select class="form-control multi_select selectpicker" multiple id="edit-category" name="edit-category">
+                <option value="Chartered Accountant">Chartered Accountant</option>
+                <option value="Company Secretary">Company Secretary</option>
+                <option value="MBA">MBA</option>
+                <option value="CFO">CFO</option>
+                <option value="Influencer">Influencer</option>
+                <option value="Partner of BigFirm">Partner of BigFirm</option>
+                <option value="Startup Entrepreneur">Startup Entrepreneur</option>
+                <option value="CEO/COO">CEO/COO</option>
+                <option value="CPA">CPA</option>
+                <option value="OTHERS">OTHERS</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="edit-connect-type">Connect Type</label>
+              <select class="form-control multi_select selectpicker" multiple id="edit-connect-type"
+                name="edit-connect-type">
+                <option value="Kaam ka Banda">Kaam ka Banda</option>
+                <option value="Pheku">Pheku</option>
+                <option value="Jugaadu">Jugaadu</option>
+                <option value="Amazing Networks">Amazing Networks</option>
+                <option value="Gazab Ideas">Gazab Ideas</option>
+                <option value="Normal">Normal</option>
+              </select>
+            </div>
+            <div class="row">
+              <div class="col">
+                <div class="form-group">
+                  <label for="linkedin-summary">Linkedin Summary</label>
+                  <input class="form-control" id="edit-linkedin-summary" name="edit-linkedin-summary" />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">
+              Close
+            </button>
+            <button type="button" class="btn btn-primary" onclick="save_data()">Edit Details</button>
+          </div>
+        </form>
+
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Email Modal  -->
+
+
+  <div class="modal fade myEmail" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true"
+    id="myEdit">
+    <div class="modal-dialog modal-lg" style="z-index: 1000;">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLongTitle">
+            Send Emails
+          </h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span class="btn-cross"><i class="fas fa-times"></i></span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="massmail-form">
+            {% csrf_token %}
+            <div class="form-group">
+              <label for="exampleFormControlSelect1">From</label>
+              <select class="form-control" id="exampleFormControlSelect1" name="sender">
+                {% for email in emails %}
+                <option>{{email.b_email}}</option>
+                {% endfor %}
+
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="mail-values">To</label>
+              <input type="text" class="form-control" id="mail-values" placeholder="name@example.com" value=""
+                name="recipient">
+            </div>
+
+            <div class="form-group">
+              <label for="exampleFormControlInput1">Subject</label>
+              <input type="text" class="form-control" id="exampleFormControlInput2" placeholder="" name="subject">
+            </div>
+
+            <div class="form-group">
+              <label for="exampleFormControlTextarea1">Body</label>
+              <textarea class="form-control" id="exampleFormControlTextarea1" rows="4" name="body"></textarea>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                Close
+              </button>
+              <button type="submit" onclick="sendmassmail()" class="btn btn-success">Send</button>
+            </div>
+          </form>
+
+        </div>
+      </div>
+    </div>
+
+
+
+    <script>
+      function add_data() {
+        if (document.getElementById('name').value == '')
+          return
+        var frm = $('#add_data');
+        $.ajax({
+          type: "POST",
+          url: "/",
+          data: frm.serialize(),
+          success: function (response) {
+            location.reload(true);
+          }
+        });
+      }
+    </script>
+
+
+    <script>
+      function send_new_user_data() {
+        var frm = $('#new-user-form');
+        $.ajax({
+          type: "POST",
+          url: "/create_user",
+          data: frm.serialize(),
+          success: function (response) {
+            location.reload(true);
+          }
+
+        });
+      }
+    </script>
+
+    <script>
+      function save_data() {
+        var frm = $('#edit-details-form');
+        $.ajax({
+          type: "POST",
+          url: "/update_record",
+          data: frm.serialize(),
+          success: function (response) {
+            location.reload(true);
+            document.getElementById('alert-popup').classList.remove('hide')
+            const message = `<strong>Alert:</strong> Customer details have been updated`
+            document.getElementById('popup-message').innerHTML = message
+          }
+        });
+      }
+    </script>
+
+    <script>
+      function deletecustomerfunction(elem) {
+        var user_id = elem.querySelector('.user-id').value
+        // console.log(user_id)
+        $.ajax({
+          type: "POST",
+          url: "/delete_record/",
+          data: {
+            csrfmiddlewaretoken: '{{ csrf_token }}',
+            name: user_id,
+          },
+          success: function (response) {
+            location.reload(true);
+            document.getElementById('alert-popup').classList.remove('hide')
+            const message = `<strong>Alert:</strong> Selected customer details have been deleted`
+            document.getElementById('popup-message').innerHTML = message
+          }
+        });
+      }
+    </script>
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+      integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+      crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+      integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+      crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.18/js/bootstrap-select.min.js"
+      integrity="sha512-yDlE7vpGDP7o2eftkCiPZ+yuUyEcaBwoJoIhdXv71KZWugFqEphIS3PU60lEkFaz8RxaVsMpSvQxMBaKVwA5xg=="
+      crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+      integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+      crossorigin="anonymous"></script>
+
+    <script src="https://unpkg.com/@trevoreyre/autocomplete-js"></script>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <!-- View and Edit data retrieve  -->
+
+    <script>
+      $('.view-link').click(function () {
+        $('#view-name').val($(this).data('name'));
+        $('#view-company').val($(this).data('company'));
+        $('#view-designation').val($(this).data('designation'));
+        $('#view-current-role').val($(this).data('current-role'));
+        $('#view-nature-of-work').val($(this).data('nature-of-work'));
+        $('#view-phone').val($(this).data('phone'));
+        $('#view-email').val($(this).data('email'));
+        $('#view-linkedin').val($(this).data('linkedin'));
+        $('#view-rating').val($(this).data('rating'));
+        $('#view-connection').val($(this).data('connection'));
+        $('#view-status').val($(this).data('status'));
+        $('#view-category').val($(this).data('category'));
+        $('#view-connect-type').val($(this).data('connect-type'));
+        $('#view-linkedin-summary').val($(this).data('linkedin-summary'));
+      });
+
+      $('.edit-link').click(function () {
+        $('#edit-id').val($(this).data('id'));
+        $('#edit-name').val($(this).data('name'));
+        $('#edit-company').val($(this).data('company'));
+        $('#edit-designation').val($(this).data('designation'));
+        $('#edit-current-role').val($(this).data('current-role'));
+        $('#edit-phone').val($(this).data('phone'));
+        $('#edit-email').val($(this).data('email'));
+        $('#edit-linkedin').val($(this).data('linkedin'));
+        $('#edit-rating').val($(this).data('rating'));
+        $('#edit-connected-by').val($(this).data('connected-by'));
+        $('#edit-linkedin-summary').val($(this).data('linkedin-summary'));
+        $('#edit-status').val($(this).data('status'));
+
+        var both = document.getElementById('myEdit').querySelectorAll('.filter-option-inner-inner')
+        both[0].textContent = $(this).data('nature-of-work')
+        both[1].textContent = $(this).data('category')
+        both[2].textContent = $(this).data('connect-type')
+      });
+    </script>
+    <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.0/jquery-ui.js"></script>
+
+
+
+    <script>
+
+      $(function () {
+        var arrayOfValues = [];
+
+        $(document).on("click", "#update_linkedin_data", function () {
+          var selectedrows = $("#maintable input:checked").parents('tr').find('td').filter('#linkedinapidata');
+
+          var contentArray = [];
+          $('#loading-overlay').show()
+          $.each(selectedrows, function (i, v) {  //loop each one
+            contentArray.push($(v).text().replace(/(\r\n|\n|\r)/gm, "").trim());//push the values to the array
+          });
+          // console.log(contentArray)
+          $.ajax({
+            type: "POST",
+            url: "/update_linkedin_data/",
+            data: {
+              csrfmiddlewaretoken: '{{ csrf_token }}',
+              linkedin_input: contentArray,
+            },
+            success: function (response) {
+              var str = "";
+              console.log(typeof(response['log_data']));
+              for(var i=0; i<response['log_data'].length; i++) {
+                // console.log("Found: "+response['log_data'][i]);
+                str = str + (i+1) + ". " + response['log_data'][i] + "\n\n";
+              }
+              swal({
+  title: "Here's all the changes!",
+  text: str,
+  icon: "info",
+  buttons: [
+    'NO',
+    'YES'
+  ],
+}).then(function(isConfirm) {
+  if (isConfirm) {
+    location.reload();
+  }
+});
+
+            },
+            complete: function () {
+              $('#loading-overlay').hide()
+              // location.reload(true);
+            }
+          });
+        })
+
+      })
+
+    </script>
+
+
+    <script>
+      $(function () {
+
+        $(".tags").autocomplete({
+          source: '{% url "autocomplete" %}',
+        });
+
+        $(".tags-new").autocomplete({
+          source: '{% url "autocomplete" %}',
+          appendTo: "#new-modal"
+        });
+
+        $(".tags-filter").autocomplete({
+          source: '{% url "autocomplete" %}',
+          appendTo: "#filter-div"
+        });
+
+        $(".edit-tags-new").autocomplete({
+          source: '{% url "autocomplete" %}',
+          appendTo: "#edit-modal"
+        });
+      });
+    </script>
+
+    <script>
+      $(document).ready(function () {
+        $('.check-class').click(function () {
+          var txt = "";
+          $('.check-class:checked').each(function () {
+            txt += $(this).val() + ", "
+          });
+          $('#mail-values').val(txt);
+        });
+
+      });
+    </script>
+
+    <script>
+      $(document).ready(function () {
+        $('.check-main').click(function () {
+          $('.check-class').each(function () {
+            $(this).click()
+          });
+        });
+      });
+    </script>
+    <script>
+      var count;
+
+      function starmark(item) {
+        count = item.id[0];
+        console.log(count);
+        $('#rating').val(count);
+        var subid = item.id.substring(1);
+        for (var i = 0; i < 5; i++) {
+          if (i < count) {
+            document.getElementById((i + 1) + subid).style.color = "orange";
+          }
+          else {
+            document.getElementById((i + 1) + subid).style.color = "grey";
+          }
+
+
+        }
+
+      }
+
+    </script>
+
+    <script>
+      document.getElementById('autofill-button').addEventListener('click', (e) => {
+        var linkedin_input = document.getElementById('linkedin');
+        var loader = document.querySelector('#loader');
+        if (linkedin_input.value == '') return
+        loader.style.display = 'inline';
+
+        // $('#loading-overlay').show()
+        $.ajax({
+          type: "GET",
+          url: "/autofill",
+          data: {
+            csrfmiddlewaretoken: '{{ csrf_token }}',
+            input_value: linkedin_input.value
+          },
+          success: function (response) {
+            document.getElementById('name').value = response["name"]
+            document.getElementById('company').value = response["current_company"]
+            document.getElementById('designation').value = response["headline"]
+            document.getElementById('current-role').value = response["current_role"]
+            document.getElementById('linkedin-summary').value = response["summary"]
+          },
+          complete: function () {
+            loader.style.display = 'none';
+          }
+        });
+      })
+    </script>
+    <script>
+      function autofillEdit() {
+        var linkedin_input = document.getElementById('edit-linkedin')
+        var loader = document.querySelector('#loader');
+        loader.style.display = 'inline';
+        // $('#loading-overlay').show()
+        $.ajax({
+          type: "GET",
+          url: "/autofill",
+          data: {
+            csrfmiddlewaretoken: '{{ csrf_token }}',
+            input_value: linkedin_input.value
+          },
+          success: function (response) {
+            document.getElementById('edit-name').value = response["name"]
+            document.getElementById('edit-company').value = response["current_company"]
+            document.getElementById('edit-designation').value = response["headline"]
+            document.getElementById('edit-current-role').value = response["current_role"]
+            document.getElementById('edit-linkedin-summary').value = response["summary"]
+
+          },
+          complete: function () {
+            loader.style.display = 'none';
+            // $('#loading-overlay').hide()
+          }
+        });
+      }
+    </script>
+
+    <script>
+      function sendmassmail() {
+        var frm = $('#massmail-form');
+        $.ajax({
+          type: "POST",
+          url: "/massmail",
+          data: frm.serialize(),
+          success: function (response) {
+            location.reload(true);
+            document.getElementById('alert-popup').classList.remove('hide')
+            const message = `<strong>Alert:</strong> Email sent`
+            document.getElementById('popup-message').innerHTML = message
+          }
+        });
+      }
+    </script>
+
+    <!-- <script>
+      function exportcsv() {
+        $.ajax({
+          type: "POST",
+          url: "/exportcsv",
+          data: {
+            csrfmiddlewaretoken: '{{ csrf_token }}',
+          },
+          success: function(response) {
+            location.replace('/exportcsv')
+          }
+        });
+      }
+    </script> -->
+
+    <!-- <script>
+      function exportcsv() {
+        var x = document.getElementsByClassName('id-value')
+        const idList = []
+        for (var i = 0; i < x.length; i++)
+          idList.push(x[i].textContent)
+
+        $.ajax({
+          type: "GET",
+          url: "/exportcsv",
+          data: {
+            csrfmiddlewaretoken: '{{ csrf_token }}',
+            user_ids: idList,
+          },
+          // success: function (response) {
+          //   console.log(response)
+          //   // window.open('/exportcsv', '_blank');
+          //   // location.replace('/exportcsv')
+          // }
+        });
+      }
+    </script> -->
+
+    <!-- <script>
+      document.onreadystatechange = function () {
+        if (document.readyState !== "complete") {
+          $('#loading-overlay').show()
+        } else {
+          $('#loading-overlay').hide()
+        }
+      };
+    </script> -->
+
+    <script>
+      var phone = document.querySelector('#phone');
+      phone.addEventListener('keyup', function () {
+        var cross = document.querySelector('#phone-cross');
+        var check = document.querySelector('#phone-check');
+        if (phone.value.length == 10) {
+          phone.style.border = '2px solid green';
+          cross.style.display = 'none';
+          check.style.display = 'block';
+          return false;
+        } else if (phone.value.length == 0) {
+          phone.style.border = '1px solid rgb(192, 192, 192)';
+          cross.style.display = 'none';
+          check.style.display = 'none';
+        } else {
+          phone.style.border = '2px solid red';
+          cross.style.display = 'block';
+          check.style.display = 'none';
+
+        }
+      })
+
+    </script>
+
+    <!-- <script>
+      var info = document.querySelector('.btn-info');
+      info.addEventListener('click', function(){
+        var loader = document.querySelector('#loader');
+        var name = document.getElementById('#name');
+        loader.style.display = 'inline';
+
+        // if (name.value.length > 0) {
+        //   loader.style.display = 'block';
+        //   return false;
+        // } else {
+        //   loader.style.display = 'none';
+        // }
+      })
+    </script> -->
+
+</body>
+
+</html>
